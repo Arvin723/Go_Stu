@@ -19,7 +19,8 @@ func copyFile(filename, src, des string) (bool, string, error) {
 		return false, "copyFile: src File Not Exit!", err
 	}
 
-	msg, err := cmdRunner_GB18030("xcopy", filepath, des, "/y")
+	//msg, err := cmdRunner_GB18030("xcopy", filepath, des, "/y")
+	msg, err := cmdRunner_CHCP("xcopy", filepath, des, "/y")
 	if err != nil {
 		return false, msg + "\ncopyFile: cmdRunner error!", err
 	}
