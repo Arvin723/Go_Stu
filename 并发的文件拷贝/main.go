@@ -24,9 +24,15 @@ type param struct {
 	idx      int
 }
 
-//copy原则：
-//0.不能有相同的des+filenale
-
+/*
+**目前的情况**
+1.理应多测试
+2.现在都在main包中, 以后各功能完善后应该分出来
+3.现在的配置文件conf.ini是纯手动配，
+	以后应该用其他工具 从更简单的文件中 提取数据并自动生成, 只有少量内容手动配置
+4.其他功能的追加：拷贝前追加其他动作， 或者完成其他的命令
+5.conf.ini的过滤: 除了copyfile相关的配置,有其他配置时,提前过滤掉，而不是在Goroutine中去报错
+*/
 func main() {
 	fmt.Println("======================================================")
 	cfg, err := goconfig.LoadConfigFile("conf.ini")
@@ -92,13 +98,7 @@ func main() {
 			}
 
 			msg += "commands]:\n"
-			var cpmsg string
-			var copyOk bool
-			if copyAttr.copymode == COPY {
-				copyOk, cpmsg, _ = copyFile(copyAttr.filename, copyAttr.src, copyAttr.des)
-			} else if copyAttr.copymode == COVER {
-				copyOk, cpmsg, _ = copyFileIfDesExist(copyAttr.filename, copyAttr.src, copyAttr.des)
-			}
+			copyOk, cpmsg, _ := copyFile_MODE(copyAttr.copymode, copyAttr.filename, copyAttr.src, copyAttr.des)
 			msg += cpmsg + "\n"
 			if copyOk == false {
 				msg += "#### copy failed! ####\n"
@@ -159,7 +159,13 @@ func getParam(index int, cfg *goconfig.ConfigFile, files []string) (param, error
 
 }
 
+//检查目标是否唯一, 顺便检查源文件是否存在
 func uniqueFilePathCheck(copyAttrs []param, copyAttr param) ([]param, bool) {
+	fileOk, _ := isFileExist(copyAttr.src + "\\" + copyAttr.filename)
+	if fileOk == false {
+		return copyAttrs, false
+	}
+
 	lenOfAttrs := len(copyAttrs)
 	desPath, err := filepath.Abs(copyAttr.des)
 	if err != nil {
@@ -185,6 +191,8 @@ func getCurrentWorkPath() (string, error) {
 	return currentWorkPath, nil
 }
 
+//此处打印不一定是正确拷贝过的文件， 而已拷贝的文件应该在其中
+//原因在于uniqueFilePathCheck检查只会对文件，目标，源的情况做检查，而命令执行的成功与否无法知晓
 func printCopyedFile(copyAttrs []param) {
 	fmt.Println("####################################################################")
 	lenOfAttrs := len(copyAttrs)

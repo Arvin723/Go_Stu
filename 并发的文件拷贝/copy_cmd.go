@@ -1,12 +1,25 @@
 package main
 
-import "os"
-
 const (
 	COPY  = "COPY"
 	COVER = "FUGAI"
+	NEW   = "NEW"
 )
 
+func copyFile_MODE(mode, filename, src, des string) (bool, string, error) {
+	switch mode {
+	case COPY:
+		return copyFile_COPY(filename, src, des)
+	case COVER:
+		return copyFile_COVER(filename, src, des)
+	case NEW:
+		return copyFile_NEW(filename, src, des)
+	default:
+		return copyFile(filename, src, des)
+	}
+}
+
+//copy命令的调用
 func copyFile(filename, src, des string) (bool, string, error) {
 	src, des, err := checkLastByte(src, des)
 	if err != nil {
@@ -28,7 +41,13 @@ func copyFile(filename, src, des string) (bool, string, error) {
 	return true, "copyFile: \n" + msg + "copyFile end\n", nil
 }
 
-func copyFileIfDesExist(filename, src, des string) (bool, string, error) {
+//任何情况(除非源处没有文件) -> 拷贝
+func copyFile_COPY(filename, src, des string) (bool, string, error) {
+	return copyFile(filename, src, des)
+}
+
+//目标处没有文件 -> 不拷贝
+func copyFile_COVER(filename, src, des string) (bool, string, error) {
 	despath := des + "\\" + filename
 	if fileOk, err := isFileExist(despath); fileOk == false {
 		return false, "copyFileIfDesExist: des File Not Exit!", err
@@ -36,15 +55,13 @@ func copyFileIfDesExist(filename, src, des string) (bool, string, error) {
 	return copyFile(filename, src, des)
 }
 
-func isFileExist(filepath string) (bool, error) {
-	_, err := os.Stat(filepath)
-	if err == nil {
-		return true, nil
+//目标处已有文件 -> 不拷贝
+func copyFile_NEW(filename, src, des string) (bool, string, error) {
+	despath := des + "\\" + filename
+	if fileOk, err := isFileExist(despath); fileOk == true {
+		return false, "copyFileIfDesExist: des File Not Exit!", err
 	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
+	return copyFile(filename, src, des)
 }
 
 func checkLastByte(src, des string) (string, string, error) {

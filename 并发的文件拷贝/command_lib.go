@@ -47,6 +47,14 @@ func cmdRunner_CHCP(name string, arg ...string) (string, error) {
 	}
 }
 
+func cmdRunner_GB18030(name string, arg ...string) (string, error) {
+	return cmdRunner(GB18030, name, arg...)
+}
+
+func cmdRunner_SHIFTJIS(name string, arg ...string) (string, error) {
+	return cmdRunner(SHIFTJIS, name, arg...)
+}
+
 func cmdRunner(encode, name string, arg ...string) (string, error) {
 	cmd := exec.Command(name, arg...)
 
@@ -71,14 +79,6 @@ func cmdRunner(encode, name string, arg ...string) (string, error) {
 	}
 
 	return msg, nil
-}
-
-func cmdRunner_GB18030(name string, arg ...string) (string, error) {
-	return cmdRunner(GB18030, name, arg...)
-}
-
-func cmdRunner_SHIFTJIS(name string, arg ...string) (string, error) {
-	return cmdRunner(SHIFTJIS, name, arg...)
 }
 
 func ConvertByte2String(byte []byte, charset string) string {
